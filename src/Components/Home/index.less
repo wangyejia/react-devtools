@@ -1,0 +1,27 @@
+.ant-layout-sider {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    flex: 0 0 300px !important;
+    .ant-list-item {
+        padding: 5px 10px;
+        &:hover {
+            background-color: #1da57a;
+            cursor: pointer;
+        }
+        .anticon-close,
+        .ant-list-item-meta-title,
+        .ant-list-item-meta-description {
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .ant-list-item-meta-description {
+            width: 266px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .anticon-close:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+    }
+}
