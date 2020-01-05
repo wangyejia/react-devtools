@@ -1,6 +1,7 @@
 import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 import { HomeIndex, HomeProject } from 'Components';
+import './index.less';
 
 export const Home = () => {
     return (

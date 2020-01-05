@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Drawer, Form, Row, Col, Button, Select, Icon, Cascader } from 'antd';
+import { Drawer, Form, Row, Col, Button, Select, Icon } from 'antd';
 import { useForm } from 'sunflower-antd';
 import {
     setDoubleClickAst,
@@ -9,12 +9,14 @@ import {
     setAstAttrNames,
     setAstAttrStyle
 } from 'Actions';
-import { attrs4DoubleClick, attrs4Style } from 'Constants';
+import { attrs4DoubleClick, attrs4Style, attrs4Event } from 'Constants';
 
 const { Option, OptGroup } = Select;
 
 const getAttrNames = attrs => {
-    const styleNames = Object.keys(attrs.style || {});
+    const styleNames = Object.keys(attrs.style || {}).filter(item => {
+        return item !== 'width' && item !== 'height';
+    });
     const attrNames = Object.keys(attrs).filter(item => {
         return item !== 'id' && item !== 'style' && attrs[item];
     });
@@ -40,11 +42,12 @@ const DndItemAttrImpl = props => {
         attrs4Select,
         attrNames4Style,
         attrNames4Select,
+        attrNames4Event,
         attrNames4DoubleClick,
         doubleClickAttrs
     } = props;
     const { style: doubleClickStyle = {} } = doubleClickAttrs;
-    const attrs = { ...attrs4Select, ...attrs4Style };
+    const attrs = { ...attrs4Select, ...attrs4Style, ...attrs4Event };
     const dispatch = useDispatch();
     const { getFieldDecorator } = form;
     const hanldeAttrNameChange = value => {
@@ -56,6 +59,7 @@ const DndItemAttrImpl = props => {
         !attrNames4Select.length && attrNames4Select.push('');
         dispatch(setAstAttrNames(attrNames4Select));
     };
+    console.log(attrName);
     return (
         <Row gutter={24} style={{ marginBottom: '10px' }}>
             <Col span={10}>
@@ -83,6 +87,13 @@ const DndItemAttrImpl = props => {
                     </OptGroup>
                     <OptGroup label='通用'>
                         <Option value='className'>className</Option>
+                    </OptGroup>
+                    <OptGroup label='事件'>
+                        {getAttrNameOption(
+                            attrNames4Event,
+                            attrNames4Select,
+                            'event'
+                        )}
                     </OptGroup>
                 </Select>
             </Col>
@@ -125,19 +136,24 @@ export const DndItemAttr = Form.create()(({ form }) => {
     const attrNames4Select = useSelector(state => state.ast.attrNames) || [];
     const {
         attrs: doubleClickAttrs = {},
-        name: doubleClickName
+        name: doubleClickName,
+        children: doubleClickChildren = []
     } = doubleClickAst;
     const { id: doubleClickId } = doubleClickAttrs;
     const attrs4Select = attrs4DoubleClick[doubleClickName] || {};
     const attrNames4DoubleClick = Object.keys(attrs4Select);
     const attrNames4Style = Object.keys(attrs4Style);
+    const attrNames4Event = Object.keys(attrs4Event);
     const { validateFieldsAndScroll } = form;
+    if (doubleClickChildren.length && doubleClickChildren[0].type === 'text') {
+        doubleClickAttrs.text = doubleClickChildren[0].content;
+    }
     useEffect(() => {
         dispatch(setAstAttrNames(getAttrNames(doubleClickAttrs)));
     }, [doubleClickId]);
     const handleClose = () => {
-        dispatch(setAstAttrNames([]));
         dispatch(setDoubleClickAst());
+        dispatch(setAstAttrNames([]));
     };
     const handleAddAttr = () => {
         attrNames4Select.push('');
@@ -195,6 +211,7 @@ export const DndItemAttr = Form.create()(({ form }) => {
                         attrs4Select={attrs4Select}
                         attrNames4Style={attrNames4Style}
                         attrNames4Select={attrNames4Select}
+                        attrNames4Event={attrNames4Event}
                         attrNames4DoubleClick={attrNames4DoubleClick}
                     />
                 ))}

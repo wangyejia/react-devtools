@@ -18,3 +18,22 @@ export const getNodeByType = type => {
     }
     return getLastNode(typeArr, 0, window.antd);
 };
+
+export const findCatalogItem = (catalog, key) => {
+    for (const item of catalog) {
+        const { key: catalogKey, isLeaf, children } = item;
+        if (catalogKey === key) {
+            return item;
+        }
+        const prev = key
+            .split('/')
+            .slice(0, -1)
+            .join('/');
+        if (prev.includes(catalogKey) && !isLeaf) {
+            const result = findCatalogItem(children, key);
+            if (result) {
+                return result;
+            }
+        }
+    }
+};

@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
+import { createLogger } from 'redux-logger';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import reducer from './Reducers';
@@ -10,7 +11,11 @@ import * as serviceWorker from './serviceWorker';
 import('antd').then(antd => {
     window.antd = antd;
 });
-const store = createStore(reducer);
+const middleware = [];
+if (process.env.NODE_ENV !== 'production') {
+    middleware.push(createLogger());
+}
+const store = createStore(reducer, applyMiddleware(...middleware));
 
 ReactDOM.render(
     <Provider store={store}>

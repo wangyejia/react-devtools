@@ -62,8 +62,9 @@ export const HomeIndex = () => {
                                 properties: ['openDirectory']
                             })
                             .then(rst => {
-                                const pPath = rst.filePaths[0];
-                                const pName = pPath.split('/').splice(-1)[0];
+                                const filePaths = rst.filePaths[0].split('/');
+                                const pPath = filePaths.slice(0, -1).join('/');
+                                const pName = filePaths.slice(-1)[0];
                                 reactProjectStorage.unshift({ pName, pPath });
                                 localStorage.setItem(
                                     'reactProject',

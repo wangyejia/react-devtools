@@ -64,8 +64,8 @@ export const DndItem = ({ ast }) => {
     const { attrs: doubleClickAttrs = {} } = doubleClickAst;
     const { style: doubleClickStyle = {} } = doubleClickAttrs;
     const { type, name, attrs, displayType } = ast;
-    const { id, className, style } = attrs;
-    const { width, height } = style || {};
+    const { id, className, style = {} } = attrs;
+    const { width, height } = style;
     const isContainer = className === 'dnd-container';
     const isText = type === 'text';
     let timer = null;
@@ -75,6 +75,9 @@ export const DndItem = ({ ast }) => {
     };
     const handleDoubleClick = e => {
         e.stopPropagation();
+        if (isContainer) {
+            return;
+        }
         dispatch(setDoubleClickAst(id));
     };
     const [{ isOverCurrent }, drop] = useDrop({
@@ -158,7 +161,10 @@ export const DndItem = ({ ast }) => {
         if (!isText && (clientWidth || clientHeight)) {
             dispatch(
                 setAstAttrs(id, {
-                    style: { width: clientWidth, height: clientHeight }
+                    style: Object.assign(style, {
+                        width: clientWidth,
+                        height: clientHeight
+                    })
                 })
             );
         }
@@ -169,10 +175,10 @@ export const DndItem = ({ ast }) => {
             const { clientWidth, clientHeight } = node;
             dispatch(
                 setAstAttrs(id, {
-                    style: {
+                    style: Object.assign(style, {
                         width: width || clientWidth,
                         height: height || clientHeight
-                    }
+                    })
                 })
             );
         }

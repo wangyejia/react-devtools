@@ -36,6 +36,7 @@ export const HomeProject = Form.create()(({ form }) => {
         if (!spinning) {
             return;
         }
+        dispatch(toggleSpin());
         const [project, stat] = arg;
         let reactProject = localStorage.getItem('reactProject');
         reactProject = reactProject ? JSON.parse(reactProject) : [];
@@ -48,8 +49,9 @@ export const HomeProject = Form.create()(({ form }) => {
         ) {
             reactProject.unshift(project);
             localStorage.setItem('reactProject', JSON.stringify(reactProject));
+            history.goBack();
+            ipcRenderer.send('open-project', project);
         }
-        dispatch(toggleSpin());
     });
     const formItem = [
         {
@@ -86,7 +88,9 @@ export const HomeProject = Form.create()(({ form }) => {
                             })
                             .then(rst => {
                                 rst.filePaths.length &&
-                                    setFieldsValue({ pPath: rst.filePaths[0] });
+                                    setFieldsValue({
+                                        pPath: rst.filePaths[0] + '/'
+                                    });
                             });
                     }}
                 />

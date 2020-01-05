@@ -1,0 +1,36 @@
+.editor-container {
+    display: flex;
+    height: 100vh;
+    background-color: white;
+    .editor-catalog {
+        width: 350px;
+        height: 100vh;
+        overflow-y: scroll;
+    }
+    .editor-resize-divider {
+        width: 4px;
+        border-right: solid 1px rgba(0, 0, 0, 0.1);
+        box-shadow: 1px 0 4px 0 rgba(0, 0, 0, 0.2);
+        cursor: col-resize;
+    }
+    .editor-content {
+        width: 100%;
+        height: 100vh;
+        .ant-tabs {
+            height: 100%;
+            .ant-tabs-bar {
+                margin-bottom: 0;
+            }
+            .ant-tabs-content {
+                height: 100%;
+                .ant-tabs-tabpane-active {
+                    height: 100%;
+                }
+            }
+        }
+        .react-codemirror2,
+        .CodeMirror {
+            height: 100%;
+        }
+    }
+}

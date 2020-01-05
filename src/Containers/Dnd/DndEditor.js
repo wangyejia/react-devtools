@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layout } from 'antd';
 import { DndContent, DndSider } from 'Components';
+import './index.less';
 
 const { Content, Sider } = Layout;
 

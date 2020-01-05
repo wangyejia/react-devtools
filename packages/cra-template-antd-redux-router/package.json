@@ -1,0 +1,27 @@
+{
+    "name": "cra-template-antd-redux-router",
+    "version": "0.1.2",
+    "description": "A cra template for antd/redux/react-router",
+    "main": "template.json",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wangyejia/react-devtools.git",
+        "directory": "packages/cra-template-antd-redux-router"
+    },
+    "keywords": [
+        "react",
+        "template",
+        "antd",
+        "redux",
+        "router"
+    ],
+    "author": "wangyejia",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/wangyejia/react-devtools/issues"
+    },
+    "files": [
+        "template",
+        "template.json"
+    ]
+}

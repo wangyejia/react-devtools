@@ -1,4 +1,6 @@
 import {
+    INIT_DND_AST,
+    INIT_AST,
     GET_AST,
     SET_AST,
     RESET_AST,
@@ -13,6 +15,19 @@ import {
     SET_RESIZE_STAT
 } from 'Constants';
 
+export const initDndAst = () => {
+    return {
+        type: INIT_DND_AST
+    };
+};
+
+export const initAst = (target, sourceAst) => {
+    return {
+        type: INIT_AST,
+        target,
+        sourceAst
+    };
+};
 export const getAst = target => {
     return {
         type: GET_AST,

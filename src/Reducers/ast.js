@@ -1,4 +1,6 @@
 import {
+    INIT_DND_AST,
+    INIT_AST,
     GET_AST,
     SET_AST,
     RESET_AST,
@@ -69,6 +71,14 @@ export default (
     const { displayType, target, source, direction } = action;
     const astState = cloneDeep(state.astState);
     switch (action.type) {
+        case INIT_DND_AST:
+            astState.children = [];
+            return { ...state, astState };
+        case INIT_AST:
+            const { sourceAst: sourceAst4Init } = action;
+            const targetAst4Init = findAst(astState, target);
+            appendAst(targetAst4Init, cloneDeep(sourceAst4Init));
+            return { ...state, astState };
         case GET_AST:
             return {
                 ...state,
@@ -208,7 +218,6 @@ export default (
             const { attrs: sourceAttrs, target: target4Attrs } = action;
             const targetAst4Attrs = findAst(astState, target4Attrs);
             const { text: sourceText } = sourceAttrs;
-            console.log(sourceAttrs);
             const {
                 attrs: targetAttrs4Attrs,
                 children: targetChildren4Attrs
@@ -216,19 +225,19 @@ export default (
             const { style: targetAttrsStyle4Attrs = {} } = targetAttrs4Attrs;
             // 添加文本子元素
             if (sourceText) {
-                targetChildren4Attrs.push({
-                    type: 'text',
-                    content: sourceText,
-                    attrs: {
-                        id: getRandomId()
-                    }
-                });
+                targetChildren4Attrs.length
+                    ? (targetChildren4Attrs[0].content = sourceText.trim())
+                    : targetChildren4Attrs.push({
+                          type: 'text',
+                          content: sourceText.trim(),
+                          attrs: {
+                              id: getRandomId()
+                          }
+                      });
             }
 
             // 将属性合并
             Object.assign(targetAttrs4Attrs, sourceAttrs);
-            console.log('set');
-            console.log(targetAst4Attrs);
             return { ...state, astState };
         case DELETE_AST_ATTRS:
             const {
@@ -236,7 +245,6 @@ export default (
                 target: target4DeleteAttrs,
                 deleteWidthAndHeight
             } = action;
-            console.log(deleteWidthAndHeight);
             const targetAst4DeleteAttrs = findAst(astState, target4DeleteAttrs);
             const {
                 attrs: targetAttrs4DeleteAttrs,
@@ -251,6 +259,7 @@ export default (
                 delete targetAttrStyle4DeleteAttrs.height;
             }
             // 删除属性
+            console.log(targetAttrs4DeleteAttrs);
             Object.keys(targetAttrs4DeleteAttrs)
                 .filter(item => {
                     return (
@@ -267,7 +276,6 @@ export default (
                     }
                     delete targetAttrs4DeleteAttrs[item];
                 });
-            console.log('delete');
             return { ...state, astState };
         case SET_AST_ATTR_STYLE:
             const { target: target4Style, style: style4Style } = cloneDeep(
@@ -277,8 +285,6 @@ export default (
             const { attrs: targetAstAttrs4Style } = targetAst4Style;
             const { style: targetAstAttrStyle4Style } = targetAstAttrs4Style;
             Object.assign(targetAstAttrStyle4Style, style4Style);
-            console.log('style');
-            console.log(targetAst4Style);
             return { ...state, astState };
         case SET_AST_ATTR_NAMES:
             const attrNames = cloneDeep(action.attrNames);
