@@ -7,7 +7,6 @@ export const DndMenuItem = ({ title, type, displayType }) => {
     const dispatch = useDispatch();
     const [, drag] = useDrag({
         item: { type, displayType },
-        begin: () => {},
         end: (item, monitor) => {
             if (!monitor.didDrop()) {
                 return;
@@ -15,10 +14,7 @@ export const DndMenuItem = ({ title, type, displayType }) => {
             dispatch(
                 setAst(item.type, displayType, monitor.getDropResult().id)
             );
-        },
-        collect: monitor => ({
-            isDragging: !!monitor.isDragging()
-        })
+        }
     });
     return <span ref={drag}>{title}</span>;
 };

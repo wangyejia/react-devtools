@@ -1,12 +1,12 @@
 /*jshint -W030 */
-var tagRE = /<[a-zA-Z\-\!\/](?:"[^"]*"['"]*|'[^']*'['"]*|[^'"])*?(?<!=)>/g;
-var attrRE = /[^)]\s([^'"/\s><{}:,0-9]+?)[\s/>]|([^\s=]+)=\s?(".*?"|'.*?'|{{.*?}}|([\s\S]*?)}+)/g;
+const tagRE = /(<[a-zA-Z\-!/](?:"[^"]*"['"]*|'[^']*'['"]*|[^'"])*?(?<!=)>)|(?<=>[\s\S]*)({.*)|}\)}/g;
+const attrRE = /[^)]\s([^'"/\s><{}:,0-9]+?)[\s/>]|([^\s=]+)=\s?(".*?"|'.*?'|{{.*?}}|([\s\S]*?)}+)/g;
 // re-used obj for quick lookups of components
-var empty = Object.create ? Object.create(null) : {};
+const empty = Object.create ? Object.create(null) : {};
 // create optimized lookup object for
 // void elements as listed here:
 // http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
-var lookup = Object.create ? Object.create(null) : {};
+let lookup = Object.create ? Object.create(null) : {};
 lookup.area = true;
 lookup.base = true;
 lookup.br = true;
@@ -28,14 +28,13 @@ const tagName2DisplayType = {
     div: 'block',
     Button: 'inline'
 };
-
 const getRandomId = () =>
     Math.random()
         .toString(36)
         .slice(-8)
         .toUpperCase();
 function parseTag(tag) {
-    var res = {
+    let res = {
         type: 'tag',
         displayType: 'container',
         name: '',
@@ -44,7 +43,7 @@ function parseTag(tag) {
         children: []
     };
 
-    var tagMatch = tag.match(/<\/?([^\s]+?)[/\s>]/);
+    let tagMatch = tag.match(/<\/?([^\s]+?)[/\s>]/);
     if (tagMatch) {
         const tagName = tagMatch[1];
         res.name = tagName;
@@ -57,8 +56,8 @@ function parseTag(tag) {
         }
     }
 
-    var reg = new RegExp(attrRE);
-    var result = null;
+    let reg = new RegExp(attrRE);
+    let result = null;
     for (;;) {
         result = reg.exec(tag);
 
@@ -71,8 +70,8 @@ function parseTag(tag) {
         }
 
         if (result[1]) {
-            var attr = result[1].trim();
-            var arr = [attr, ''];
+            let attr = result[1].trim();
+            let arr = [attr, ''];
 
             if (attr.indexOf('=') > -1) {
                 arr = attr.split('=');
@@ -106,19 +105,64 @@ function parseTag(tag) {
     res.attrs.id = getRandomId();
     return res;
 }
-
-function parse(html, options) {
-    debugger;
+function parseFunc(tag) {
+    let res = {
+        type: 'func',
+        displayType: 'container',
+        target: '',
+        name: '',
+        voidElement: false,
+        attrs: { id: getRandomId() },
+        children: []
+    };
+    if (tag[tag.length - 1] === '}') {
+        res.name = tag.slice(1, -1);
+        res.voidElement = true;
+        return res;
+    }
+    const nameReg = /(?<={).*(?=\(\()/g;
+    const nameMatch = tag.match(nameReg);
+    const paramReg = /(?<=\().*(?=\s=>)/g;
+    const paramMatch = tag.match(paramReg);
+    if (nameMatch) {
+        [res.target, res.name] = nameMatch[0].split('.');
+    }
+    if (paramMatch) {
+        let params = paramMatch[0];
+        params = params[0] === '(' ? params.slice(1, -1) : params;
+        res.params = params.split(', ');
+    }
+    return res;
+}
+function parseElement(
+    html,
+    compName,
+    dependencies,
+    variables,
+    functions,
+    options
+) {
+    // debugger;
     options || (options = {});
     options.components || (options.components = empty);
-    var result = [];
-    var current;
-    var level = -1;
-    var arr = [];
-    var byTag = {};
-    var inComponent = false;
-
-    html.replace(tagRE, function(tag, index) {
+    let result = [];
+    let current;
+    let level = -1;
+    let arr = [];
+    let byTag = {};
+    let inComponent = false;
+    let component = {
+        type: 'component',
+        displayType: 'container',
+        name: 'div',
+        compName,
+        dependencies,
+        variables,
+        functions,
+        attrs: { id: getRandomId() },
+        children: result
+    };
+    html.replace(tagRE, function(tag, ...rest) {
         if (inComponent) {
             if (tag !== '</' + current.name + '>') {
                 return;
@@ -126,26 +170,37 @@ function parse(html, options) {
                 inComponent = false;
             }
         }
-        var isOpen = tag.charAt(1) !== '/';
-        var start = index + tag.length;
-        var nextChar = html.charAt(start);
-        var parent;
-
-        if (isOpen) {
+        let index = rest[2];
+        let isOpen = tag.charAt(1) !== '/' && tag !== '})}';
+        let start = index + tag.length;
+        let nextChar = html.charAt(start);
+        let parent;
+        if (tag[0] === '{') {
             level++;
-
+            current = parseFunc(tag);
+            // if we're at root, push new base node
+            if (level === 0) {
+                result.push(current);
+            }
+            parent = arr[level - 1];
+            if (parent) {
+                parent.children.push(current);
+            }
+            arr[level] = current;
+        } else if (isOpen) {
+            level++;
             current = parseTag(tag);
             if (current.type === 'tag' && options.components[current.name]) {
                 current.type = 'component';
                 inComponent = true;
             }
-
             if (
                 !current.voidElement &&
                 !inComponent &&
                 nextChar &&
                 nextChar !== '<' &&
-                !/^\s*$/.test(html.slice(start, html.indexOf('<', start)))
+                !/^\s*$/.test(html.slice(start, html.indexOf('<', start))) &&
+                html[start + 1] !== '{'
             ) {
                 current.children.push({
                     type: 'text',
@@ -153,23 +208,17 @@ function parse(html, options) {
                     attrs: { id: getRandomId() }
                 });
             }
-
             byTag[current.tagName] = current;
-
             // if we're at root, push new base node
             if (level === 0) {
                 result.push(current);
             }
-
             parent = arr[level - 1];
-
             if (parent) {
                 parent.children.push(current);
             }
-
             arr[level] = current;
         }
-
         if (!isOpen || current.voidElement) {
             level--;
             if (!inComponent && nextChar !== '<' && nextChar) {
@@ -177,11 +226,10 @@ function parse(html, options) {
                 // if we're at the root, push a base text node. otherwise add as
                 // a child to the current node.
                 parent = level === -1 ? result : arr[level].children;
-
                 // calculate correct end of the content slice in case there's
                 // no tag after the text node.
-                var end = html.indexOf('<', start);
-                var content = html.slice(start, end === -1 ? undefined : end);
+                let end = html.indexOf('<', start);
+                let content = html.slice(start, end === -1 ? undefined : end);
                 // if a node is nothing but whitespace, no need to add it.
                 if (!/^\s*$/.test(content)) {
                     parent.push({
@@ -193,7 +241,7 @@ function parse(html, options) {
             }
         }
     });
-    return result;
+    return [component];
 }
 
 function attrString(attrs) {
@@ -238,7 +286,7 @@ function stringify(buff, doc) {
 }
 
 module.exports = {
-    parse,
+    parseElement,
     stringify: function(doc) {
         return doc.reduce(function(token, rootEl) {
             return token + stringify('', rootEl);

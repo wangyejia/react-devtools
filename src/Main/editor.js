@@ -9,7 +9,7 @@ const {
 } = require('electron');
 const shell = require('shelljs');
 const rimraf = require('rimraf');
-const { parse, stringify } = require('./utils');
+const { parseElement, stringify } = require('./utils');
 
 let editorMainWindow,
     editorMainWindowX,
@@ -547,10 +547,16 @@ ipcMain.on('open-dnd', () => {
     checkoutToolBar(true);
     fs.readFile(activeContent, 'utf8', (err, data) => {
         if (err) throw err;
-        const component = getActiveContentComponent(data);
-        // console.log(component);
-        const ast = parse(component)[0];
-        // console.log(ast);
+        const { element, compName, dependencies, variables, functions } = parse(
+            data
+        );
+        const ast = parseElement(
+            element,
+            compName,
+            dependencies,
+            variables,
+            functions
+        )[0];
         sourceData = data;
         emulatorWindow.hide();
         editorWindow.hide();
@@ -586,52 +592,87 @@ ipcMain.on('send-active-ast', (event, ast) => {
 const checkoutToolBar = isDnd => {
     toolBarView.webContents.send('checkout-toolbar', isDnd);
 };
-const getActiveContentComponent = str => {
-    debugger;
-    const arrowReg = /=>.*?{/g;
-    const arrowArr = [];
-    const returnReg = /return (?=<|\(\s*<)/g;
-    const returnArr = [];
-    while (arrowReg.exec(str) !== null) {
-        arrowArr.push(arrowReg.lastIndex);
-    }
-    while (returnReg.exec(str) !== null) {
-        returnArr.push(returnReg.lastIndex);
-    }
-    let arrowIdx = 0,
-        returnIdx = 0;
-    const arrowLength = arrowArr.length;
-    const returnLength = returnArr.length;
+const parse = str => {
+    const strArr = str
+        .split('\n')
+        .map(item => item.trim())
+        .filter(item => !!item);
+    const depReg = /import.*;/g;
+    const depRegMulti = /import {$/;
+    const depRegMultiEnd = /from.*;$/;
+    const elementReg = /export.*=> {/;
+    const functionReg = /(const|let) .+ = ((\(\)|\(?\w+.*\)?))(?=\s=>)/;
+    const variableReg = /(const|let) .+ = (?!(\()|(\w* =>))/;
+    const returnReg = /return \(/;
+    const dependencies = [];
+    const variables = [];
+    const functions = [];
     const stack = [];
-    let lastReturn;
-    const getLastReturn = start => {
-        const returnCloseIdx = str
-            .substring(start)
-            .search(/(?<=>);|(?<=>\s*\));/g);
-        const end = start + returnCloseIdx;
-        return str.substring(start, end);
-    };
-    while (arrowIdx < arrowLength && returnIdx < returnLength) {
-        const arrowItem = arrowArr[arrowIdx];
-        const returnItem = returnArr[returnIdx];
-        if (arrowItem < returnItem) {
-            stack.push(arrowItem);
-            arrowIdx++;
-        } else {
-            lastReturn = getLastReturn(returnItem);
-            stack.pop();
-            returnIdx++;
+    let idx = 0;
+    let element;
+    let compName;
+    while (idx < strArr.length) {
+        const line = strArr[idx];
+        if (depReg.test(line)) {
+            // 引入文件
+            parseDependencies(line, dependencies);
+        } else if (depRegMulti.test(line)) {
+            // 引入多行文件
+            const depStart = idx;
+            while (!depRegMultiEnd.test(strArr[++idx])) {}
+            const depEnd = idx;
+            parseDependencies(
+                strArr.slice(depStart, depEnd + 1).join(''),
+                dependencies
+            );
+        } else if (elementReg.test(line)) {
+            compName = parseCompName(line);
+        } else if (variableReg.test(line)) {
+            if (line[line.length - 1] !== ';') {
+                const varStart = idx;
+                while (strArr[++idx] !== '});') {}
+                const varEnd = idx;
+                parseVariable(
+                    strArr.slice(varStart, varEnd + 1).join(''),
+                    variables
+                );
+            } else {
+                parseVariable(line, variables);
+            }
+        } else if (functionReg.test(line)) {
+            const functionStart = idx;
+            while (strArr[++idx] !== '};') {}
+            const functionEnd = idx;
+            parseFunction(
+                strArr.slice(functionStart, functionEnd + 1).join(''),
+                functions
+            );
+        } else if (returnReg.test(line)) {
+            stack.push(idx);
+        } else if (line === ');') {
+            const lastIdx = stack.pop();
+            if (!stack.length) {
+                element = strArr.slice(lastIdx + 1, idx).join('\n');
+            }
         }
+        idx++;
     }
-    while (returnIdx < returnLength) {
-        lastReturn = getLastReturn(returnArr[returnIdx]);
-        stack.pop();
-        returnIdx++;
-    }
-    if (lastReturn[0] === '(') {
-        lastReturn = lastReturn.substring(1, lastReturn.length - 1).trim();
-    }
-    return lastReturn;
+    return { element, compName, dependencies, variables, functions };
+};
+const parseCompName = str => {
+    return str.match(/(?<=const\s).*(?=\s\=\s)/g)[0];
+};
+const parseDependencies = (str, dependencies) => {
+    const [key, val] = str.split('import ')[1].split(' from ');
+    dependencies.push({ key, val: val.substring(0, val.length - 1) });
+};
+const parseVariable = (str, variables) => {
+    const [key, ...val] = str.split('const ')[1].split(' = ');
+    variables.push({ key, val: val.join('') });
+};
+const parseFunction = (str, functions) => {
+    const [key, ...val] = str.split('const ')[1].split(' = ');
+    functions.push({ key, val: val.join('') });
 };
 const rightClickMenuItem4Folder = [
     { label: '新建文件', value: 'addFile' },

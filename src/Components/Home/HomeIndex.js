@@ -33,7 +33,7 @@ export const HomeIndex = () => {
                 <Avatar
                     shape='square'
                     size={64}
-                    src={require('../../assets/logo.png')}
+                    src={require('../../Assets/logo.png')}
                 />
                 <h1 style={{ fontSize: '25px', marginTop: '5px' }}>
                     React Devtools
