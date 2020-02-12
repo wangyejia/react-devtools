@@ -7,7 +7,8 @@ import {
     TOGGLE_EMULATOR_DEVICE,
     SET_DEVICE_TYPE,
     SET_DEVICE_SIZE,
-    TOGGLE_TOOLBAR
+    TOGGLE_TOOLBAR,
+    TOGGLE_PAGE_ATTR
 } from 'Constants';
 
 export default (state = {}, action) => {
@@ -30,6 +31,8 @@ export default (state = {}, action) => {
             return { ...state, deviceSize: action.deviceSize };
         case TOGGLE_TOOLBAR:
             return { ...state, isDnd: action.isDnd };
+        case TOGGLE_PAGE_ATTR:
+            return { ...state, showPageAttr: !state.showPageAttr };
         default:
             return state;
     }

@@ -228,6 +228,50 @@ export const menus = [
                 ]
             },
             {
+                title: '数据录入',
+                type: menuTypes.ITEMGROUP,
+                key: 'antd-input',
+                children: [
+                    {
+                        title: 'Input 输入框',
+                        type: menuTypes.SUB,
+                        key: 'antd-input-input',
+                        children: [
+                            {
+                                title: 'Input 基础输入框',
+                                type: 'Input',
+                                key: 'antd-input-input-input',
+                                displayType: displayTypes.INLINE
+                            },
+                            {
+                                title: 'TextArea 输入区',
+                                type: 'Input.TextArea',
+                                key: 'antd-input-input-textarea',
+                                displayType: displayTypes.INLINE
+                            },
+                            {
+                                title: 'Search 搜索框',
+                                type: 'Input.Search',
+                                key: 'antd-input-input-search',
+                                displayType: displayTypes.INLINE
+                            },
+                            {
+                                title: 'Group 输入框组',
+                                type: 'Input.Group',
+                                key: 'antd-input-input-group',
+                                displayType: displayTypes.INLINE
+                            },
+                            {
+                                title: 'Password 密码输入框',
+                                type: 'Input.Password',
+                                key: 'antd-input-input-password',
+                                displayType: displayTypes.INLINE
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 title: '数据展示',
                 type: menuTypes.ITEMGROUP,
                 key: 'antd-data',
@@ -447,6 +491,24 @@ export const menus = [
                 title: 'span',
                 type: 'span',
                 key: 'global-span'
+            },
+            {
+                title: 'ul',
+                type: 'ul',
+                key: 'global-ul',
+                displayType: displayTypes.BLOCK
+            },
+            {
+                title: 'li',
+                type: 'li',
+                key: 'global-li',
+                displayType: displayTypes.BLOCK
+            },
+            {
+                title: 'function',
+                type: 'func',
+                key: 'global-func',
+                displayType: displayTypes.BLOCK
             }
         ]
     }

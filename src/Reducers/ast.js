@@ -10,6 +10,11 @@ import {
     SET_AST_ATTR_STYLE,
     SET_AST_ATTR_NAMES,
     SET_DOUBLE_CLICK_AST,
+    SET_PAGE_ATTR,
+    ADD_PAGE_ATTR,
+    DELETE_PAGE_ATTR,
+    SET_FUNC_ATTR,
+    SET_FUNC_VOIDELEMENT,
     displayTypes,
     directionTypes
 } from 'Constants';
@@ -18,6 +23,7 @@ import {
     findAst,
     findFatherAst,
     createAst,
+    createFuncAst,
     appendAst,
     insertAst,
     deleteAst
@@ -93,7 +99,10 @@ export default (
         case SET_AST:
             const { dndType } = action;
             const targetAst4Set = findAst(astState, target);
-            const sourceAst4Set = createAst(dndType, displayType);
+            const sourceAst4Set =
+                dndType === 'func'
+                    ? createFuncAst(dndType, displayType)
+                    : createAst(dndType, displayType);
             appendAst(targetAst4Set, sourceAst4Set);
             return { ...state, dragId: sourceAst4Set.attrs.id, astState };
         case RESET_AST:
@@ -289,6 +298,54 @@ export default (
         case SET_AST_ATTR_NAMES:
             const attrNames = cloneDeep(action.attrNames);
             return { ...state, attrNames };
+        case SET_PAGE_ATTR:
+            const {
+                value4PageAttr,
+                type4PageAttr,
+                keyOrVal4PageAttr,
+                index4PageAttr
+            } = action;
+            const target4PageAttr = astState.children[0][type4PageAttr];
+            target4PageAttr[index4PageAttr][keyOrVal4PageAttr] = value4PageAttr;
+            return { ...state, astState };
+        case ADD_PAGE_ATTR:
+            const { type4AddPageAttr } = action;
+            const target4AddPageAttr = astState.children[0][type4AddPageAttr];
+            target4AddPageAttr.push({ '': '' });
+            return { ...state, astState };
+        case DELETE_PAGE_ATTR:
+            const { type4DeletePageAttr, index4DeletePageAttr } = action;
+            const target4DeletePageAttr =
+                astState.children[0][type4DeletePageAttr];
+            target4DeletePageAttr.splice(index4DeletePageAttr, 1);
+            return { ...state, astState };
+        case SET_FUNC_ATTR:
+            const {
+                attrObj: attrObj4FuncAttr,
+                target: targetId4FuncAttr
+            } = action;
+            const {
+                target: target4FuncAttr,
+                name: name4FuncAttr,
+                params: params4FuncAttr
+            } = attrObj4FuncAttr;
+            const targetAst4FuncAttr = findAst(astState, targetId4FuncAttr);
+            targetAst4FuncAttr.target = target4FuncAttr;
+            targetAst4FuncAttr.name = name4FuncAttr;
+            targetAst4FuncAttr.params = [...params4FuncAttr.split('|')];
+            return { ...state, astState };
+        case SET_FUNC_VOIDELEMENT:
+            const { target: target4FuncVoidElement, voidElement } = action;
+            const targetAst4FuncVoidElement = findAst(
+                astState,
+                target4FuncVoidElement
+            );
+            targetAst4FuncVoidElement.voidElement = voidElement;
+            return {
+                ...state,
+                astState,
+                doubleClickAst: targetAst4FuncVoidElement
+            };
         default:
             return state;
     }

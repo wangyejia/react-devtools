@@ -26,7 +26,11 @@ lookup.wbr = true;
 
 const tagName2DisplayType = {
     div: 'block',
-    Button: 'inline'
+    Button: 'inline',
+    Input: 'inline',
+    'Input.Search': 'inline',
+    ul: 'block',
+    li: 'block'
 };
 const getRandomId = () =>
     Math.random()
@@ -108,7 +112,7 @@ function parseTag(tag) {
 function parseFunc(tag) {
     let res = {
         type: 'func',
-        displayType: 'container',
+        displayType: 'block',
         target: '',
         name: '',
         voidElement: false,
@@ -170,8 +174,12 @@ function parseElement(
                 inComponent = false;
             }
         }
+        if (tag === '})}') {
+            level--;
+            return;
+        }
         let index = rest[2];
-        let isOpen = tag.charAt(1) !== '/' && tag !== '})}';
+        let isOpen = tag.charAt(1) !== '/';
         let start = index + tag.length;
         let nextChar = html.charAt(start);
         let parent;
@@ -231,7 +239,7 @@ function parseElement(
                 let end = html.indexOf('<', start);
                 let content = html.slice(start, end === -1 ? undefined : end);
                 // if a node is nothing but whitespace, no need to add it.
-                if (!/^\s*$/.test(content)) {
+                if (!/^\W*$/.test(content)) {
                     parent.push({
                         type: 'text',
                         content: content,
@@ -273,17 +281,67 @@ function stringify(buff, doc) {
                 (doc.attrs ? attrString(doc.attrs) : '') +
                 (doc.voidElement ? '/>' : '>');
             if (doc.voidElement) {
-                return buff;
+                return buff + '\n';
             }
             return (
                 buff +
                 doc.children.reduce(stringify, '') +
                 '</' +
                 doc.name +
-                '>'
+                '>\n'
             );
+        case 'component':
+            const {
+                dependencies,
+                variables,
+                functions,
+                compName,
+                children
+            } = doc;
+            return (buff += `${stringifyDependencies(dependencies)}
+          export const ${compName} = () => {
+          ${stringifyVariables(variables)}
+          ${stringifyVariables(functions)}
+          return (
+            ${children.reduce(stringify, '')}
+          )
+        }`);
+        case 'func':
+            const {
+                target,
+                name,
+                params,
+                voidElement,
+                children: children4Func
+            } = doc;
+            if (voidElement) {
+                return (buff += `{${name}}\n`);
+            }
+            return (buff += `{${target}.${name}(${
+                params.length === 1 ? params[0] : '(' + params.join(', ') + ')'
+            } => {
+          return (
+            ${children4Func.reduce(stringify, '')}
+          );
+        })}`);
     }
 }
+const stringifyVariables = variables => {
+    return (
+        variables.reduce((buff, variable) => {
+            const { key, val } = variable;
+            return (buff += `const ${key} = ${val}\n`);
+        }, '') + '\n'
+    );
+};
+const stringifyDependencies = dependencies => {
+    return (
+        dependencies.reduce((buff, dep) => {
+            const { key, val } = dep;
+            return (buff += `import ${key} from ${val};\n`);
+        }, '') + '\n'
+    );
+};
 
 module.exports = {
     parseElement,

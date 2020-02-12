@@ -7,7 +7,8 @@ import {
     TOGGLE_EMULATOR_DEVICE,
     SET_DEVICE_TYPE,
     SET_DEVICE_SIZE,
-    TOGGLE_TOOLBAR
+    TOGGLE_TOOLBAR,
+    TOGGLE_PAGE_ATTR
 } from 'Constants';
 
 export const toggleEmulator = () => {
@@ -64,5 +65,11 @@ export const toggleToolBar = isDnd => {
     return {
         type: TOGGLE_TOOLBAR,
         isDnd
+    };
+};
+
+export const togglePageAttr = () => {
+    return {
+        type: TOGGLE_PAGE_ATTR
     };
 };

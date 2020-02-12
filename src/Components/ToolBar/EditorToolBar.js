@@ -7,7 +7,8 @@ import {
     toggleDevtools,
     toggleRunProject,
     toggleLoading,
-    toggleToolBar
+    toggleToolBar,
+    togglePageAttr
 } from 'Actions';
 const { ipcRenderer } = window.require('electron');
 
@@ -20,11 +21,15 @@ export const EditorToolBar = () => {
         hideDevtools,
         isRunProject,
         showLoading,
-        isDnd
+        isDnd,
+        showPageAttr
     } = toolbarState;
     useEffect(() => {
         ipcRenderer.on('checkout-toolbar', (event, arg) => {
             dispatch(toggleToolBar(arg));
+        });
+        ipcRenderer.on('close-page-attr-reply', () => {
+            showPageAttr && dispatch(togglePageAttr());
         });
     }, []);
     const handleEmulatorClick = () => {
@@ -62,10 +67,24 @@ export const EditorToolBar = () => {
     const handleToggleEditorClick = () => {
         ipcRenderer.send('open-editor');
     };
+    const handlePageAttr = () => {
+        ipcRenderer.send('toggle-page-attr', !showPageAttr);
+        dispatch(togglePageAttr());
+    };
     return (
         <Row className='toolbar-container'>
             <Col span={12}>
-                {isDnd ? null : (
+                {isDnd ? (
+                    <Fragment>
+                        <Button
+                            className='toolbar-btn'
+                            icon='file'
+                            onClick={handlePageAttr}
+                        >
+                            页面属性
+                        </Button>
+                    </Fragment>
+                ) : (
                     <Fragment>
                         <Button
                             className='toolbar-btn'

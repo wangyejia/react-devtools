@@ -10,6 +10,8 @@ const {
 const shell = require('shelljs');
 const rimraf = require('rimraf');
 const { parseElement, stringify } = require('./utils');
+const prettier = require('prettier/standalone');
+const plugins = [require('prettier/parser-babylon')];
 
 let editorMainWindow,
     editorMainWindowX,
@@ -362,7 +364,6 @@ const resizeWindows = () => {
                     : editorMainWindowWidth,
             height: emulatorHeight
         });
-        emulatorWindow.setAlwaysOnTop(true);
     }
     if (showEditor) {
         editorWindow.setBounds({
@@ -373,8 +374,6 @@ const resizeWindows = () => {
                 ? editorHeight
                 : editorMainWindowHeight - toolBarViewHeight
         });
-        devToolsWindow.setAlwaysOnTop(true);
-        emulatorWindow.setAlwaysOnTop(true);
     }
     if (showDevTools) {
         devToolsWindow.setBounds({
@@ -385,7 +384,6 @@ const resizeWindows = () => {
                 ? devToolsHeight
                 : editorMainWindowHeight - toolBarViewHeight
         });
-        emulatorWindow.setAlwaysOnTop(true);
     }
 };
 const addTerminalWindow = () => {
@@ -437,9 +435,16 @@ ipcMain.on('open-file', (event, key) => {
 });
 ipcMain.on('save-file', (event, arg) => {
     const { file, value } = arg;
-    fs.writeFile(file, value, 'utf8', err => {
+    const formatVal = prettier.format(value, { parser: 'babel', plugins });
+    fs.writeFile(file, formatVal, 'utf8', err => {
         if (err) throw err;
         console.log('保存成功');
+        console.log(activeContent);
+        console.log(formatVal);
+        editorWindow.webContents.send('set-editor-content', [
+            activeContent,
+            formatVal
+        ]);
     });
 });
 ipcMain.on('toggle-emulator', (event, hideEmulator) => {
@@ -566,10 +571,8 @@ ipcMain.on('open-dnd', () => {
     });
 });
 ipcMain.on('open-editor', () => {
-    sourceData = sourceData.replace(
-        getActiveContentComponent(sourceData),
-        stringify(activeAst.children)
-    );
+    sourceData = stringify(activeAst.children);
+    sourceData = prettier.format(sourceData, { parser: 'babel', plugins });
     fs.writeFile(activeContent, sourceData, 'utf8', err => {
         if (err) throw err;
         console.log('修改成功');
@@ -738,4 +741,11 @@ ipcMain.on('delete-file', (event, arg) => {
               console.log('删除文件夹完成');
               event.reply('delete-file-reply', true);
           });
+});
+
+ipcMain.on('toggle-page-attr', (event, showPageAttr) => {
+    dndWindow.webContents.send('toggle-page-attr-reply');
+});
+ipcMain.on('close-page-attr', () => {
+    toolBarView.webContents.send('close-page-attr-reply');
 });

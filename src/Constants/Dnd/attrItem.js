@@ -1,6 +1,7 @@
 import React from 'react';
 import { Input, Select } from 'antd';
 
+const { TextArea } = Input;
 const { Option } = Select;
 
 export const BUTTON = {
@@ -47,4 +48,15 @@ export const BUTTON = {
             <Option value='reset'>reset</Option>
         </Select>
     )
+};
+
+export const INPUT_SEARCH = {
+    enterButton: <Input autoFocus placeholder='属性值' />,
+    loading: (
+        <Select autoFocus allowClear placeholder='属性值'>
+            <Option value='true'>true</Option>
+            <Option value='false'>false</Option>
+        </Select>
+    ),
+    onSearch: <TextArea autoSize={{ minRows: 1, maxRows: 6 }} />
 };

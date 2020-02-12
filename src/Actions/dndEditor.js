@@ -12,7 +12,12 @@ import {
     SET_DOUBLE_CLICK_AST,
     SET_HOVER_ID,
     SET_DRAG_STAT,
-    SET_RESIZE_STAT
+    SET_RESIZE_STAT,
+    SET_PAGE_ATTR,
+    ADD_PAGE_ATTR,
+    DELETE_PAGE_ATTR,
+    SET_FUNC_ATTR,
+    SET_FUNC_VOIDELEMENT
 } from 'Constants';
 
 export const initDndAst = () => {
@@ -119,5 +124,51 @@ export const setResizeStat = isResizing => {
     return {
         type: SET_RESIZE_STAT,
         isResizing
+    };
+};
+
+export const setPageAttr = (
+    value4PageAttr,
+    type4PageAttr,
+    keyOrVal4PageAttr,
+    index4PageAttr
+) => {
+    return {
+        type: SET_PAGE_ATTR,
+        value4PageAttr,
+        type4PageAttr,
+        keyOrVal4PageAttr,
+        index4PageAttr
+    };
+};
+
+export const addPageAttr = type4AddPageAttr => {
+    return {
+        type: ADD_PAGE_ATTR,
+        type4AddPageAttr
+    };
+};
+
+export const deletePageAttr = (type4DeletePageAttr, index4DeletePageAttr) => {
+    return {
+        type: DELETE_PAGE_ATTR,
+        type4DeletePageAttr,
+        index4DeletePageAttr
+    };
+};
+
+export const setFuncAttr = (target, attrObj) => {
+    return {
+        type: SET_FUNC_ATTR,
+        target,
+        attrObj
+    };
+};
+
+export const setFuncVoidElement = (target, voidElement) => {
+    return {
+        type: SET_FUNC_VOIDELEMENT,
+        target,
+        voidElement
     };
 };

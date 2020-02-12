@@ -13,10 +13,18 @@ const getLastNode = (typeArr, idx, element) => {
 
 export const getNodeByType = type => {
     const typeArr = type.split('.');
-    if (type === 'div' || type === 'span') {
+    if (type === 'div' || type === 'span' || type === 'ul' || type === 'li') {
         return type;
     }
     return getLastNode(typeArr, 0, window.antd);
+};
+
+export const getNodeByFunc = ast => {
+    const { name, voidElement } = ast;
+    if (voidElement) {
+        return `{${name}}`;
+    }
+    return 'div';
 };
 
 export const findCatalogItem = (catalog, key) => {

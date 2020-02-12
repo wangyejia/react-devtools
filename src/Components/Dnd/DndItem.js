@@ -9,7 +9,7 @@ import {
     directionTypes,
     dropTypes
 } from 'Constants';
-import { getNodeByType } from 'Helpers';
+import { getNodeByType, getNodeByFunc } from 'Helpers';
 import {
     resetAst,
     deleteAst,
@@ -22,22 +22,29 @@ import {
 import { cloneDeep } from 'lodash';
 
 const createReactElement = ({ id, ast, width, height }) => {
-    const { type, content, name, attrs, children } = ast;
+    const { type, content, name, attrs, children, voidElement } = ast;
     const style4Attr = cloneDeep(attrs.attrs || {});
     const style4Resize =
         width && height ? { width: `${width}px`, height: `${height}px` } : {};
     if (type === 'text') {
         return content;
     }
+    if (type === 'func' && voidElement) {
+        return `{${name}}`;
+    }
     return createElement(
-        getNodeByType(name),
+        type === 'func' ? getNodeByFunc(ast) : getNodeByType(name),
         {
             ...attrs,
             style: { ...style4Attr, ...style4Resize }
         },
-        children.map(item => {
-            return <DndItem id={id} key={item.attrs.id} ast={item}></DndItem>;
-        })
+        children.length
+            ? children.map(item => {
+                  return (
+                      <DndItem id={id} key={item.attrs.id} ast={item}></DndItem>
+                  );
+              })
+            : null
     );
 };
 
@@ -63,7 +70,7 @@ export const DndItem = ({ ast }) => {
     const doubleClickAst = useSelector(state => state.ast.doubleClickAst) || {};
     const { attrs: doubleClickAttrs = {} } = doubleClickAst;
     const { style: doubleClickStyle = {} } = doubleClickAttrs;
-    const { type, name, attrs, displayType } = ast;
+    const { type, name, attrs, displayType, voidElement } = ast;
     const { id, className, style = {} } = attrs;
     const { width, height } = style;
     const isContainer = className === 'dnd-container';
@@ -183,7 +190,7 @@ export const DndItem = ({ ast }) => {
             );
         }
     }, [width, height]);
-    return isText ? (
+    return isText || (type === 'func' && voidElement) ? (
         <DndItemImpl id={id} ast={ast} />
     ) : (
         <span
@@ -194,6 +201,7 @@ export const DndItem = ({ ast }) => {
             style={{ width: `${width}px`, height: `${height}px` }}
             onMouseOver={e => {
                 handleMouseEvent(e, id);
+                console.log(ast);
             }}
             onMouseLeave={e => {
                 handleMouseEvent(e, '');

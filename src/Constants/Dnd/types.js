@@ -1,7 +1,3 @@
-export const dndTypes = {
-    DIV: 'div'
-};
-
 export const dndTypesArr = [
     'Button',
     'Icon',
@@ -31,6 +27,11 @@ export const dndTypesArr = [
     'PageHeader',
     'Steps',
     'Steps.Step',
+    'Input',
+    'Input.TextArea',
+    'Input.Search',
+    'Input.Group',
+    'Input.Password',
     'Avatar',
     'Badge',
     'Comment',
@@ -59,7 +60,10 @@ export const dndTypesArr = [
     'Tabs.TabPane',
     'Table',
     'div',
-    'span'
+    'span',
+    'ul',
+    'li',
+    'func'
 ];
 
 export const menuTypes = {

@@ -1,11 +1,14 @@
 import React from 'react';
-import { UnControlled as CodeMirror } from 'react-codemirror2';
+import { useDispatch } from 'react-redux';
+import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material.css';
 import 'codemirror/mode/javascript/javascript.js';
+import { setEditorContent } from 'Actions';
 const { ipcRenderer } = window.require('electron');
 
 export const CodeMirrorWrap = props => {
+    const dispatch = useDispatch();
     const { data, file } = props;
     let keyBuffer = [];
     return (
@@ -38,6 +41,9 @@ export const CodeMirrorWrap = props => {
                     });
                 }
                 keyBuffer = [];
+            }}
+            onBeforeChange={(editor, data, value) => {
+                dispatch(setEditorContent(file, value));
             }}
         />
     );

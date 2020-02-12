@@ -58,7 +58,7 @@ export const DndSider = () => {
         })
     });
     return (
-        <Menu theme='dark' mode='inline' defaultOpenKeys={['antd']}>
+        <Menu theme='dark' mode='inline' defaultOpenKeys={['global']}>
             {getMenuItem(menus)}
             <Menu.Item key='delete'>
                 <span

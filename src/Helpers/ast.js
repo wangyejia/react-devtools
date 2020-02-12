@@ -53,6 +53,17 @@ export const createAst = (
     children
 });
 
+export const createFuncAst = (type, displayType) => ({
+    type,
+    displayType,
+    name: '',
+    target: '',
+    params: [],
+    attrs: { id: getRandomId() },
+    voidElement: false,
+    children: []
+});
+
 const shouldCreateInlineBlock = (targetAst, sourceAst) => {
     return (
         targetAst.displayType === displayTypes.CONTAINER &&
